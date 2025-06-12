@@ -1,3 +1,4 @@
+
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9uET2gk";
 const TABELA = "pedidos";
@@ -30,11 +31,13 @@ function renderPedidos(pedidos) {
       </div>
       <p>${p.descricao}</p>
     `;
+
     if (p.status === "analise") {
       div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">Aceitar</button>`;
     } else if (p.status === "producao") {
       div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➡️</button>`;
     }
+
     document.getElementById(p.status).appendChild(div);
   });
 
@@ -43,7 +46,7 @@ function renderPedidos(pedidos) {
 
 function verificarBotaoZerar(pedidos) {
   const existeAnaliseOuProducao = pedidos.some(p => p.status === "analise" || p.status === "producao");
-  const btnZerar = document.getElementById("zerarBtn");
+  const btnZerar = document.getElementById("resetBtn");
   btnZerar.disabled = existeAnaliseOuProducao;
 }
 
@@ -102,6 +105,6 @@ async function zerarPedidosEntregues() {
   fetchPedidos();
 }
 
-document.getElementById("zerarBtn").addEventListener("click", zerarPedidosEntregues);
+document.getElementById("resetBtn").addEventListener("click", zerarPedidosEntregues);
 setInterval(fetchPedidos, 5000);
 fetchPedidos();
