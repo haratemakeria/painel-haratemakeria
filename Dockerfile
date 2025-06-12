@@ -1,3 +1,6 @@
+# Usa imagem oficial do PHP com Apache
+FROM php:8.1-apache
+
 # Habilita reescrita de URL
 RUN a2enmod rewrite
 
