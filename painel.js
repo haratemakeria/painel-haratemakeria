@@ -18,20 +18,22 @@ function renderPedidos(pedidos) {
     col.innerHTML = `<h2>${status.charAt(0).toUpperCase() + status.slice(1)}</h2>`;
   });
 
-  let contador = 1;
+  let numero = 1;
   pedidos.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
-    div.innerHTML = `<strong>Pedido #${contador++}</strong><br><strong>${p.cliente}</strong><p>${p.descricao}</p>`;
+    div.innerHTML = `<strong>Pedido #${numero++} - ${p.cliente}</strong><p>${p.descricao}</p>`;
 
     if (p.status === "analise") {
-      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">➤</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')" class="seta-verde">Aceitar</button>`;
     } else if (p.status === "producao") {
-      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➤</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')" class="seta-verde">▶</button>`;
+    } else if (p.status === "entrega") {
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'finalizado')" class="seta-verde">▶</button>`;
     }
 
-    if (p.status === "entrega") {
-      div.innerHTML += `<button class="botao-cancelar" onclick="solicitarSenha('${p.id}')">×</button>`;
+    if (p.status === "producao" || p.status === "entrega") {
+      div.innerHTML += `<button class='btn-x' onclick="pedirSenhaECancelar('${p.id}')">X</button>`;
     }
 
     document.getElementById(p.status).appendChild(div);
@@ -51,7 +53,7 @@ async function mudarStatus(id, novoStatus) {
   fetchPedidos();
 }
 
-async function solicitarSenha(id) {
+async function pedirSenhaECancelar(id) {
   const senha = prompt("Digite a senha para cancelar:");
   if (senha === "1234") {
     await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
@@ -63,21 +65,34 @@ async function solicitarSenha(id) {
     });
     fetchPedidos();
   } else {
-    alert("Senha incorreta.");
+    alert("Senha incorreta!");
   }
 }
 
 async function zerarPedidos() {
-  const confirmar = confirm("Tem certeza que deseja zerar todos os pedidos?");
-  if (!confirmar) return;
-
-  await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-    method: "DELETE",
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=*`, {
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`
     }
   });
+  const pedidos = await res.json();
+  const emAndamento = pedidos.some(p => p.status === "analise" || p.status === "producao");
+  if (emAndamento) {
+    alert("Não é possível zerar: há pedidos em análise ou produção.");
+    return;
+  }
+  for (let p of pedidos) {
+    if (p.status === "entrega" || p.status === "finalizado") {
+      await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${p.id}`, {
+        method: "DELETE",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+    }
+  }
   fetchPedidos();
 }
 
