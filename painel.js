@@ -1,4 +1,3 @@
-
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9UET2gk";
 
@@ -19,17 +18,21 @@ function renderPedidos(pedidos) {
     col.innerHTML = `<h2>${status.charAt(0).toUpperCase() + status.slice(1)}</h2>`;
   });
 
+  let contador = 1;
   pedidos.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
-    div.innerHTML = `<strong>${p.cliente}</strong><p>${p.descricao}</p>`;
+    div.innerHTML = `<strong>Pedido #${contador++}</strong><br><strong>${p.cliente}</strong><p>${p.descricao}</p>`;
 
     if (p.status === "analise") {
-      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">Aceitar</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">➤</button>`;
     } else if (p.status === "producao") {
-      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">Avançar</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➤</button>`;
     }
-    div.innerHTML += `<button onclick="cancelar('${p.id}')">Cancelar</button>`;
+
+    if (p.status === "entrega") {
+      div.innerHTML += `<button class="botao-cancelar" onclick="solicitarSenha('${p.id}')">×</button>`;
+    }
 
     document.getElementById(p.status).appendChild(div);
   });
@@ -48,8 +51,27 @@ async function mudarStatus(id, novoStatus) {
   fetchPedidos();
 }
 
-async function cancelar(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
+async function solicitarSenha(id) {
+  const senha = prompt("Digite a senha para cancelar:");
+  if (senha === "1234") {
+    await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    fetchPedidos();
+  } else {
+    alert("Senha incorreta.");
+  }
+}
+
+async function zerarPedidos() {
+  const confirmar = confirm("Tem certeza que deseja zerar todos os pedidos?");
+  if (!confirmar) return;
+
+  await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
     method: "DELETE",
     headers: {
       apikey: SUPABASE_KEY,
