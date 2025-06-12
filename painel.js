@@ -1,8 +1,10 @@
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9UET2gk";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9uET2gk";
+const TABELA = "pedidos_2025_06_12"; // Tabela atual do dia
+const SENHA_PADRAO = "123";
 
 async function fetchPedidos() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=*`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELA}?select=*`, {
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`
@@ -18,27 +20,37 @@ function renderPedidos(pedidos) {
     col.innerHTML = `<h2>${status.charAt(0).toUpperCase() + status.slice(1)}</h2>`;
   });
 
-  let count = 1;
   pedidos.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
-      <button class="fechar" onclick="cancelar('${p.id}')">×</button>
-      <strong>#${String(count).padStart(3, '0')} - ${p.cliente}</strong>
-      <p>${p.descricao}</p>`;
+      <div style="display: flex; justify-content: space-between;">
+        <strong>#${p.numero} - ${p.cliente}</strong>
+        ${p.status !== "analise" ? `<span class="cancel-icon" onclick="pedirSenhaECancelar('${p.id}')">✖</span>` : ""}
+      </div>
+      <p>${p.descricao}</p>
+    `;
 
     if (p.status === "analise") {
       div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">Aceitar</button>`;
     } else if (p.status === "producao") {
-      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➜</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➡️</button>`;
     }
+
     document.getElementById(p.status).appendChild(div);
-    count++;
   });
+
+  verificarBotaoZerar(pedidos);
+}
+
+function verificarBotaoZerar(pedidos) {
+  const existeAnaliseOuProducao = pedidos.some(p => p.status === "analise" || p.status === "producao");
+  const btnZerar = document.getElementById("zerarBtn");
+  btnZerar.disabled = existeAnaliseOuProducao;
 }
 
 async function mudarStatus(id, novoStatus) {
-  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/${TABELA}?id=eq.${id}`, {
     method: "PATCH",
     headers: {
       apikey: SUPABASE_KEY,
@@ -50,26 +62,17 @@ async function mudarStatus(id, novoStatus) {
   fetchPedidos();
 }
 
+function pedirSenhaECancelar(id) {
+  const senha = prompt("Digite a senha para cancelar:");
+  if (senha === SENHA_PADRAO) {
+    cancelar(id);
+  } else {
+    alert("Senha incorreta!");
+  }
+}
+
 async function cancelar(id) {
-  const senha = prompt("Digite a senha para cancelar este pedido:");
-  if (senha !== "123") { // Substitua "1234" pela sua senha real
-    alert("Senha incorreta. Cancelamento abortado.");
-    return;
-  }
-
-  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
-    method: "DELETE",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`
-    }
-  });
-
-  fetchPedidos();
-}
-
-async function zerarPedidos() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?status=eq.entrega`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/${TABELA}?id=eq.${id}`, {
     method: "DELETE",
     headers: {
       apikey: SUPABASE_KEY,
@@ -79,15 +82,29 @@ async function zerarPedidos() {
   fetchPedidos();
 }
 
-document.getElementById("resetBtn").addEventListener("click", async () => {
-  const analise = document.getElementById("analise").children.length;
-  const producao = document.getElementById("producao").children.length;
-  if (analise > 1 || producao > 1) {
-    alert("Só é permitido zerar quando não houver pedidos em Análise ou Produção.");
-    return;
+async function zerarPedidosEntregues() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELA}?status=eq.entrega`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  const entregues = await res.json();
+
+  for (const pedido of entregues) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABELA}?id=eq.${pedido.id}`, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
   }
-  await zerarPedidos();
-});
+
+  fetchPedidos();
+}
+
+document.getElementById("zerarBtn").addEventListener("click", zerarPedidosEntregues);
 
 setInterval(fetchPedidos, 5000);
 fetchPedidos();
