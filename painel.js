@@ -1,4 +1,3 @@
-
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9UET2gk";
 
@@ -19,25 +18,22 @@ function renderPedidos(pedidos) {
     col.innerHTML = `<h2>${status.charAt(0).toUpperCase() + status.slice(1)}</h2>`;
   });
 
+  let count = 1;
   pedidos.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
-      <strong>#${p.numero} - ${p.cliente}</strong>
-      <p>${p.descricao}</p>
-    `;
+      <button class="fechar" onclick="cancelar('${p.id}')">×</button>
+      <strong>#${String(count).padStart(3, '0')} - ${p.cliente}</strong>
+      <p>${p.descricao}</p>`;
 
     if (p.status === "analise") {
       div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'producao')">Aceitar</button>`;
     } else if (p.status === "producao") {
-      div.innerHTML += `<button class="seta" onclick="mudarStatus('${p.id}', 'entrega')">➜</button>`;
+      div.innerHTML += `<button onclick="mudarStatus('${p.id}', 'entrega')">➜</button>`;
     }
-
-    if (p.status !== "analise") {
-      div.innerHTML += `<span class="cancelar" onclick="solicitarSenha('${p.id}')">✖</span>`;
-    }
-
     document.getElementById(p.status).appendChild(div);
+    count++;
   });
 }
 
@@ -54,17 +50,26 @@ async function mudarStatus(id, novoStatus) {
   fetchPedidos();
 }
 
-function solicitarSenha(id) {
-  const senha = prompt("Digite a senha para cancelar:");
-  if (senha === "temaki123") {
-    cancelar(id);
-  } else {
-    alert("Senha incorreta.");
+async function cancelar(id) {
+  const senha = prompt("Digite a senha para cancelar este pedido:");
+  if (senha !== "123") { // Substitua "1234" pela sua senha real
+    alert("Senha incorreta. Cancelamento abortado.");
+    return;
   }
+
+  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
+    method: "DELETE",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  });
+
+  fetchPedidos();
 }
 
-async function cancelar(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${id}`, {
+async function zerarPedidos() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?status=eq.entrega`, {
     method: "DELETE",
     headers: {
       apikey: SUPABASE_KEY,
@@ -74,27 +79,15 @@ async function cancelar(id) {
   fetchPedidos();
 }
 
-async function zerarPedidos() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=*`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`
-    }
-  });
-  const pedidos = await res.json();
-
-  const temAnaliseOuProducao = pedidos.some(p => p.status === "analise" || p.status === "producao");
-
-  if (temAnaliseOuProducao) {
-    alert("Não é possível zerar enquanto houver pedidos em análise ou produção.");
+document.getElementById("resetBtn").addEventListener("click", async () => {
+  const analise = document.getElementById("analise").children.length;
+  const producao = document.getElementById("producao").children.length;
+  if (analise > 1 || producao > 1) {
+    alert("Só é permitido zerar quando não houver pedidos em Análise ou Produção.");
     return;
   }
-
-  const entregas = pedidos.filter(p => p.status === "entrega");
-  for (const p of entregas) {
-    await cancelar(p.id);
-  }
-}
+  await zerarPedidos();
+});
 
 setInterval(fetchPedidos, 5000);
 fetchPedidos();
