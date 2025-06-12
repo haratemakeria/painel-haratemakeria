@@ -1,6 +1,7 @@
+
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9uET2gk";
-const TABELA = "pedidos_2025_06_12"; // Tabela atual do dia
+const TABELA = "pedidos";
 const SENHA_PADRAO = "123";
 
 async function fetchPedidos() {
