@@ -7,11 +7,9 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Painel de Pedidos - Hara Temakeria</h1>
-  </header>
+  <h1>Painel de Pedidos - Hara Temakeria</h1>
 
-  <main>
+  <main class="painel">
     <div class="coluna" id="analise">
       <h2>Análise</h2>
     </div>
