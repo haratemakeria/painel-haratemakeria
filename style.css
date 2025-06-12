@@ -31,21 +31,28 @@ h1 {
   border-radius: 8px;
   position: relative;
 }
-button {
-  margin: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-.botao-cancelar {
+.btn-x {
   position: absolute;
   top: 5px;
-  right: 10px;
-  background: transparent;
+  right: 8px;
   color: red;
-  font-size: 20px;
+  font-weight: bold;
+  background: none;
   border: none;
+  font-size: 16px;
   cursor: pointer;
 }
-.rodape {
-  margin: 20px;
+.seta-verde {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+#zerarBtn {
+  background-color: red;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 10px;
 }
