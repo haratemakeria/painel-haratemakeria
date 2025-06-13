@@ -1,6 +1,6 @@
 // 1. Configurações básicas
 const SUPABASE_URL = "https://ktkpdacxvqyautkfplly.supabase.co";
-const SUPABASE_KEY = "SUA_CHAVE_AQUI";  // <- Substitua pela chave correta (anon public)
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0a3BkYWN4dnF5YXV0a2ZwbGx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NTY1ODIsImV4cCI6MjA2NTMzMjU4Mn0.TRkSYcCX158bDLFb7lHD0ZNWKHgTBalFzdpb9UET2gk";  // <- Substitua pela chave correta (anon public)
 const TABELA = "pedidos";
 const SENHA_PADRAO = "123";
 
